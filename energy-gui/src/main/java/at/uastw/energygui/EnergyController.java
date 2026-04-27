@@ -28,7 +28,7 @@ public class EnergyController {
     protected void onRefreshClicked() {
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8080/energy/current"))
+                    .uri(URI.create("http://localhost:8091/energy/current"))
                     .GET()
                     .build();
 
@@ -48,7 +48,7 @@ public class EnergyController {
             String start = tf_start.getText();
             String end = tf_end.getText();
 
-            String url = "http://localhost:8080/energy/historical?start=" + start + "&end=" + end;
+            String url = "http://localhost:8091/energy/historical?start=" + start + "&end=" + end;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))

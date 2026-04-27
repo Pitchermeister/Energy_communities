@@ -7,7 +7,7 @@
     <groupId>at.uastw</groupId>
     <artifactId>energy-gui</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <n>energy-gui</n>
+    <name>energy-gui</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
