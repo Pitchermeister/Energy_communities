@@ -15,5 +15,12 @@
     <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:mac-aarch64:21" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-controls:mac-aarch64:21" level="project" />
     <orderEntry type="library" name="Maven: org.openjfx:javafx-graphics:mac-aarch64:21" level="project" />
+    <orderEntry type="library" name="Maven: org.openjfx:javafx-base:mac-aarch64:21" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-web:7.0.5" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-jpa:3.2.4" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-jpa:3.2.4" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-commons:3.2.4" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-tx:6.1.5" level="project" />
+    <orderEntry type="library" name="Maven: jakarta.persistence:jakarta.persistence-api:3.1.0" level="project" />
   </component>
 </module>
