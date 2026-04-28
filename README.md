@@ -1,6 +1,6 @@
 # Energy Communities Microservice Architecture
 
-This project is a distributed microservice architecture simulating an energy community. Per the project requirements, **every component is its own application and can be started independently.**
+This project is a distributed microservice architecture simulating an energy community.
 
 ## ⚠️ Prerequisites
 * **Java Version:** This project requires **Java 21** (e.g., Amazon Corretto 21 or Eclipse Temurin 21). Please ensure your IDE is utilizing Java 21 to avoid JavaFX Module compatibility issues.
@@ -26,17 +26,18 @@ Before starting any microservices, the underlying infrastructure must be running
 ---
 
 ## Step 2: Start the Backend Microservices
-Because these are independent components, they should be started via their dedicated Spring Boot Maven plugins. You can start these in any order, but starting the API first is recommended.
+Because these are independent components, they should be started via their dedicated Spring Boot Maven plugins. Because services communicate with each other, the startup order matters!
 
 **1. Energy API (Port 8091)**
 * In your IDE, run the `EnergyApiApplication.java` main class directly, OR use the Maven tool:
 * `energy-api -> Plugins -> spring-boot -> spring-boot:run`
 
-**2. Usage Service (Port 8092)**
-* `usage-service -> Plugins -> spring-boot -> spring-boot:run`
-
-**3. Current Percentage Service (Port 8093)**
+**2. Current Percentage Service (Port 8093)**
 * `current-percentage-service -> Plugins -> spring-boot -> spring-boot:run`
+
+**3. Usage Service (Port 8092)**
+* *(Note: Must be started after the Percentage Service, as it sends an HTTP trigger to it).*
+* `usage-service -> Plugins -> spring-boot -> spring-boot:run`
 
 **4. Community Energy Producer (RabbitMQ Sender)**
 * `community-energy-producer -> Plugins -> spring-boot -> spring-boot:run`
