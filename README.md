@@ -30,20 +30,20 @@ Because these are independent components, they should be started via their dedic
 
 **1. Energy API (Port 8091)**
 * In your IDE, run the `EnergyApiApplication.java` main class directly, OR use the Maven tool:
-* energy-api -> Plugins -> spring-boot -> spring-boot:run
+* `energy-api -> Plugins -> spring-boot -> spring-boot:run`
 
 **2. Current Percentage Service (Port 8093)**
-* current-percentage-service -> Plugins -> spring-boot -> spring-boot:run
+* `current-percentage-service -> Plugins -> spring-boot -> spring-boot:run`
 
 **3. Usage Service (Port 8092)**
 * *(Note: Must be started after the Percentage Service, as it sends an HTTP trigger to it).*
-* usage-service -> Plugins -> spring-boot -> spring-boot:run
+* `usage-service -> Plugins -> spring-boot -> spring-boot:run`
 
 **4. Community Energy Producer (RabbitMQ Sender)**
-* community-energy-producer -> Plugins -> spring-boot -> spring-boot:run
+* `community-energy-producer -> Plugins -> spring-boot -> spring-boot:run`
 
 **5. Community Energy User (RabbitMQ Receiver)**
-* community-energy-user -> Plugins -> spring-boot -> spring-boot:run
+* `community-energy-user -> Plugins -> spring-boot -> spring-boot:run`
 
 ---
 
