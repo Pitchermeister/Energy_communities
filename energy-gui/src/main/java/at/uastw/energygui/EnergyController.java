@@ -38,7 +38,7 @@ public class EnergyController {
     protected void onRefreshClicked() throws Exception {
         HttpClient client = HttpClient.newBuilder().build();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8080/energy/current"))
+                .uri(URI.create("http://localhost:8091/energy/current"))
                 .GET().build();
 
         String body = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
@@ -53,7 +53,7 @@ public class EnergyController {
 
         HttpClient client = HttpClient.newBuilder().build();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8080/energy/historical?start=" + start + "&end=" + end))
+                .uri(URI.create("http://localhost:8091/energy/historical?start=" + start + "&end=" + end))
                 .GET().build();
 
         String body = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
