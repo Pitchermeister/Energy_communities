@@ -2,9 +2,9 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox spacing="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
@@ -15,14 +15,14 @@
 
     <Label text="Current Energy Data" style="-fx-font-weight: bold;"/>
     <Button text="Refresh" onAction="#onRefreshClicked"/>
-    <Label fx:id="lb_current" text="-"/>
+    <ListView fx:id="lv_current" prefHeight="150"/>
 
     <Label text="Historical Data" style="-fx-font-weight: bold;"/>
     <Label text="Start:"/>
-    <TextField fx:id="tf_start" promptText="2025-01-10T10:00:00"/>
+    <DatePicker fx:id="dp_start"/>
     <Label text="End:"/>
-    <TextField fx:id="tf_end" promptText="2025-01-10T14:00:00"/>
+    <DatePicker fx:id="dp_end"/>
     <Button text="Load Historical Data" onAction="#onLoadHistoricalClicked"/>
-    <TextArea fx:id="ta_historical" prefHeight="200" editable="false"/>
+    <ListView fx:id="lv_historical" prefHeight="200"/>
 
 </VBox>

@@ -1,9 +1,8 @@
 package at.uastw.energygui;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.ListView;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,82 +11,37 @@ import java.net.http.HttpResponse;
 
 public class EnergyController {
 
-    @FXML
-    private Label lb_current;
+    @FXML private ListView<String> lv_current;
+    @FXML private ListView<String> lv_historical;
+    @FXML private DatePicker dp_start;
+    @FXML private DatePicker dp_end;
 
     @FXML
-    private TextField tf_start;
+    protected void onRefreshClicked() throws Exception {
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/energy/current"))
+                .GET().build();
 
-    @FXML
-    private TextField tf_end;
+        String body = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
 
-    @FXML
-    private TextArea ta_historical;
-
-    @FXML
-    protected void onRefreshClicked() {
-        try {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:8091/energy/current"))
-                    .GET()
-                    .build();
-
-            HttpClient client = HttpClient.newBuilder().build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            lb_current.setText(formatCurrent(response.body()));
-
-        } catch (Exception e) {
-            lb_current.setText("Error: " + e.getMessage());
-        }
+        lv_current.getItems().clear();
+        lv_current.getItems().add(body);
     }
 
     @FXML
-    protected void onLoadHistoricalClicked() {
-        try {
-            String start = tf_start.getText();
-            String end = tf_end.getText();
+    protected void onLoadHistoricalClicked() throws Exception {
+        String start = dp_start.getValue().toString();
+        String end = dp_end.getValue().toString();
 
-            String url = "http://localhost:8091/energy/historical?start=" + start + "&end=" + end;
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:8080/energy/historical?start=" + start + "T00:00:00&end=" + end + "T23:59:59"))
+                .GET().build();
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .GET()
-                    .build();
+        String body = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
 
-            HttpClient client = HttpClient.newBuilder().build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            ta_historical.setText(formatHistorical(response.body()));
-
-        } catch (Exception e) {
-            ta_historical.setText("Error: " + e.getMessage());
-        }
-    }
-
-    private String formatCurrent(String json) {
-        // turns the JSON into readable lines
-        return json
-                .replace("{", "")
-                .replace("}", "")
-                .replace("\"", "")
-                .replace(",", "\n");
-    }
-
-    private String formatHistorical(String json) {
-        // one block per entry, separated by a line
-        String[] entries = json.split("\\},\\{");
-        StringBuilder sb = new StringBuilder();
-        for (String entry : entries) {
-            String clean = entry
-                    .replace("[", "")
-                    .replace("]", "")
-                    .replace("{", "")
-                    .replace("}", "")
-                    .replace("\"", "")
-                    .replace(",", "\n");
-            sb.append(clean).append("\n\n");
-        }
-        return sb.toString().trim();
+        lv_historical.getItems().clear();
+        lv_historical.getItems().add(body);
     }
 }
