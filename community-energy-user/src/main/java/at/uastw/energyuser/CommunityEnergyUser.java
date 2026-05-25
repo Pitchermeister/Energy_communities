@@ -1,7 +1,9 @@
 package at.uastw.energyuser;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,6 +26,11 @@ public class CommunityEnergyUser {
 
     public CommunityEnergyUser(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+    }
+
+    @PostConstruct
+    public void setupRabbitMq() {
+        this.rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
     }
 
     public static void main(String[] args) {
