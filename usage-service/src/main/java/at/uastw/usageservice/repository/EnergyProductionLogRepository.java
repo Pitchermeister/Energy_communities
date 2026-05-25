@@ -10,6 +10,6 @@ import java.time.LocalDateTime;
 @Repository
 public interface EnergyProductionLogRepository extends JpaRepository<EnergyProductionLog, Integer> {
 
-    @Query("SELECT SUM(e.providedEnergy) FROM EnergyProductionLog e WHERE e.recordedAt = :time")
-    Double sumProductionByTime(@Param("time") LocalDateTime time);
+    @Query("SELECT SUM(e.providedEnergy) FROM EnergyProductionLog e WHERE e.recordedAt >= :start AND e.recordedAt < :end")
+    Double sumProductionInHourRange(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

@@ -9,14 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-@Service // Tells Spring this class holds business logic
+@Service
 public class UsageCalculationService {
 
     private final EnergyProductionLogRepository productionRepo;
     private final EnergyUsageLogRepository usageRepo;
     private final HourlyUsageRepository hourlyRepo;
 
-    // Spring Boot automatically injects the repositories here
     public UsageCalculationService(EnergyProductionLogRepository productionRepo,
                                    EnergyUsageLogRepository usageRepo,
                                    HourlyUsageRepository hourlyRepo) {
@@ -25,23 +24,24 @@ public class UsageCalculationService {
         this.hourlyRepo = hourlyRepo;
     }
 
-    @Transactional // Ensures the whole calculation saves perfectly, or rolls back if there's an error
+    @Transactional
     public void calculateAndSaveHourlyUsage(LocalDateTime hourToCalculate) {
-        System.out.println("Calculating data for hour: " + hourToCalculate);
+        LocalDateTime startOfHour = hourToCalculate;
+        LocalDateTime endOfHour = hourToCalculate.plusHours(1);
 
-        // 1. Fetch the sums using Option B!
-        Double totalProduced = productionRepo.sumProductionByTime(hourToCalculate);
-        Double totalUsed = usageRepo.sumUsageByTime(hourToCalculate);
+        // Call the updated repository methods with the range
+        Double totalProduced = productionRepo.sumProductionInHourRange(startOfHour, endOfHour);
+        Double totalUsed = usageRepo.sumUsageInHourRange(startOfHour, endOfHour);
 
-        // Handle nulls (just in case there are no logs for this hour)
+        // Handle null values if the database returns nothing
         if (totalProduced == null) totalProduced = 0.0;
         if (totalUsed == null) totalUsed = 0.0;
 
-        // 2. The Logic: Did we use more than we produced?
+        // Calculate distribution
         double communityUsed = Math.min(totalProduced, totalUsed);
         double gridUsed = Math.max(0, totalUsed - totalProduced);
 
-        // 3. Create the new Hourly record and save it!
+        // Save or update the hourly record
         HourlyUsage newHourlyUsage = new HourlyUsage();
         newHourlyUsage.setRecordedHour(hourToCalculate);
         newHourlyUsage.setCommunityProduced(totalProduced);
@@ -49,12 +49,7 @@ public class UsageCalculationService {
         newHourlyUsage.setGridUsed(gridUsed);
 
         hourlyRepo.save(newHourlyUsage);
-        System.out.println("SUCCESS! Saved Hourly Usage...");
-
-        // --- NEW: Send HTTP Request to Current Percentage Service (Simulating RabbitMQ) ---
-
-
-        System.out.println("SUCCESS! Saved Hourly Usage: Produced=" + totalProduced +
+        System.out.println("SUCCESS! Hourly Usage Updated: Produced=" + totalProduced +
                 ", CommunityUsed=" + communityUsed + ", GridUsed=" + gridUsed);
     }
 }

@@ -58,15 +58,17 @@ public class CommunityEnergyProducer {
     public void publish() {
         double kwh = calculateKwh();
         String datetime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
+        int producerId=random.nextInt(5)+1;
 
         Map<String, Object> message = new HashMap<>();
         message.put("type", "PRODUCER");
         message.put("association", "COMMUNITY");
+        message.put("id", producerId);
         message.put("kwh", kwh);
         message.put("datetime", datetime);
 
         rabbitTemplate.convertAndSend("energy-queue", message);
-        System.out.println("[Producer] sent=" + kwh + " kWh at " + datetime);
+        System.out.println("[Producer "+producerId+"] sent=" + kwh + " kWh at " + datetime);
     }
 
     private double calculateKwh() {
