@@ -55,8 +55,10 @@ public class EnergyController {
 
     @GetMapping("/historical")
     public List<EnergyDto> getHistorical(@RequestParam String start, @RequestParam String end) {
+        LocalDateTime startTime = LocalDateTime.parse(start);
+        LocalDateTime endTime = LocalDateTime.parse(end);
         List<EnergyDto> resultList = new ArrayList<>();
-        List<HourlyUsage> usages = usageRepo.findAll();
+        List<HourlyUsage> usages = usageRepo.findByRecordedHourBetween(startTime, endTime);
 
         // Loop through all usage records and map them with their corresponding percentages
         for (HourlyUsage usage : usages) {
