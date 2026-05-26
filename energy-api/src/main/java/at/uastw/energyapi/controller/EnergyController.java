@@ -14,8 +14,9 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/energy")
-// KULCSFONTOSSÁGÚ: Megengedjük az Angularnak (4200), hogy elkérje az adatot!
+// PETER'S DING!! VON DER ENDABGABE LÖSCHEN!
 @CrossOrigin(origins = "http://localhost:4200")
+// !!!
 public class EnergyController {
 
     private final HourlyUsageRepository usageRepo;
