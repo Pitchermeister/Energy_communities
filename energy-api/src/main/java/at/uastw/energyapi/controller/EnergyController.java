@@ -30,16 +30,13 @@ public class EnergyController {
 
     @GetMapping("/current")
     public EnergyDto getCurrent() {
-        // Fetch all hourly usages ordered, or just find the latest one.
-        // For simplicity, let's take the first one available or fallback to a dummy if empty.
-        List<HourlyUsage> usages = usageRepo.findAll();
-        if (usages.isEmpty()) {
+        HourlyUsage latestUsage = usageRepo.findTopByOrderByRecordedHourDesc();
+
+        if (latestUsage == null) {
             return new EnergyDto(LocalDateTime.now().toString(), 0, 0, 0, 0, 0);
         }
 
-        HourlyUsage latestUsage = usages.getLast();
         Optional<HourlyPercentage> percentageOpt = percentageRepo.findById(latestUsage.getRecordedHour());
-
         double depleted = percentageOpt.map(HourlyPercentage::getCommunityDepleted).orElse(0.0);
         double gridPortion = percentageOpt.map(HourlyPercentage::getGridPortion).orElse(0.0);
 
