@@ -40,23 +40,21 @@ public class ProducerService implements SchedulingConfigurer {
     public void publish() {
         double kwh = calculateKwh();
         String datetime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
-        int producerId = random.nextInt(5) + 1;
 
         Map<String, Object> message = new HashMap<>();
         message.put("type", "PRODUCER");
         message.put("association", "COMMUNITY");
-        message.put("id", producerId);
         message.put("kwh", kwh);
         message.put("datetime", datetime);
 
         rabbitTemplate.convertAndSend(ENERGY_QUEUE, message);
-        System.out.println("[Producer " + producerId + "] sent=" + kwh + " kWh at " + datetime);
+        System.out.println("[Producer] sent=" + kwh + " kWh at " + datetime);
     }
 
     private double calculateKwh() {
         double sunlightFactor = weatherDataFetcher.getSunlightFactor();
-        double base = 0.003 * sunlightFactor;
-        double variation = 0.0005 * random.nextDouble();
+        double base = 0.016 * sunlightFactor;
+        double variation = 0.003 * random.nextDouble();
         return Math.round((base + variation) * 100000.0) / 100000.0;
     }
 

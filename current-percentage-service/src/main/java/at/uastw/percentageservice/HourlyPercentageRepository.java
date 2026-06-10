@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Repository
 public interface HourlyPercentageRepository extends JpaRepository<HourlyPercentage, LocalDateTime> {
 
+    // Calculates and Upserts (Inserts or Updates) the current hour's data
     @Modifying
     @Transactional
     @Query(value = "INSERT INTO hourly_percentages (recorded_hour, community_depleted, grid_portion) " +
@@ -23,4 +24,10 @@ public interface HourlyPercentageRepository extends JpaRepository<HourlyPercenta
             "community_depleted = EXCLUDED.community_depleted, " +
             "grid_portion = EXCLUDED.grid_portion", nativeQuery = true)
     void calculateAndSavePercentages(@Param("time") LocalDateTime time);
+
+    // Deletes all historical data older than the currently processed hour
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM HourlyPercentage h WHERE h.recordedHour < :time")
+    void deleteOldRecords(@Param("time") LocalDateTime time);
 }

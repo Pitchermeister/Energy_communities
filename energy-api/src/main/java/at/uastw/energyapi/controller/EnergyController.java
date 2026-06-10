@@ -14,9 +14,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/energy")
-// PETER'S DING!! VON DER ENDABGABE LÖSCHEN!
-@CrossOrigin(origins = "http://localhost:4200")
-// !!!
 public class EnergyController {
 
     private final HourlyUsageRepository usageRepo;

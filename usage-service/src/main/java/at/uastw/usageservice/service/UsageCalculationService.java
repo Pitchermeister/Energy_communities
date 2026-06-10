@@ -1,8 +1,6 @@
 package at.uastw.usageservice.service;
 
 import at.uastw.usageservice.entity.HourlyUsage;
-import at.uastw.usageservice.repository.EnergyProductionLogRepository;
-import at.uastw.usageservice.repository.EnergyUsageLogRepository;
 import at.uastw.usageservice.repository.HourlyUsageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,44 +10,51 @@ import java.time.LocalDateTime;
 @Service
 public class UsageCalculationService {
 
-    private final EnergyProductionLogRepository productionRepo;
-    private final EnergyUsageLogRepository usageRepo;
     private final HourlyUsageRepository hourlyRepo;
 
-    public UsageCalculationService(EnergyProductionLogRepository productionRepo,
-                                   EnergyUsageLogRepository usageRepo,
-                                   HourlyUsageRepository hourlyRepo) {
-        this.productionRepo = productionRepo;
-        this.usageRepo = usageRepo;
+    public UsageCalculationService(HourlyUsageRepository hourlyRepo) {
         this.hourlyRepo = hourlyRepo;
     }
 
     @Transactional
-    public void calculateAndSaveHourlyUsage(LocalDateTime hourToCalculate) {
-        LocalDateTime startOfHour = hourToCalculate;
-        LocalDateTime endOfHour = hourToCalculate.plusHours(1);
+    public void addIncomingDataToHour(LocalDateTime targetHour, String type, Double kwh) {
 
-        // Call the updated repository methods with the range
-        Double totalProduced = productionRepo.sumProductionInHourRange(startOfHour, endOfHour);
-        Double totalUsed = usageRepo.sumUsageInHourRange(startOfHour, endOfHour);
+        // Retrieve the existing record for the specified hour, or initialize a new one
+        HourlyUsage usage = hourlyRepo.findById(targetHour).orElseGet(() -> {
+            HourlyUsage newUsage = new HourlyUsage();
+            newUsage.setRecordedHour(targetHour);
+            newUsage.setCommunityProduced(0.0);
+            newUsage.setCommunityUsed(0.0);
+            newUsage.setGridUsed(0.0);
+            return newUsage;
+        });
 
-        // Handle null values if the database returns nothing
-        if (totalProduced == null) totalProduced = 0.0;
-        if (totalUsed == null) totalUsed = 0.0;
+        // Current totals before applying the incoming delta
+        double currentProduced = usage.getCommunityProduced();
+        double currentUsedTotal = usage.getCommunityUsed() + usage.getGridUsed();
 
-        // Calculate distribution
-        double communityUsed = Math.min(totalProduced, totalUsed);
-        double gridUsed = Math.max(0, totalUsed - totalProduced);
+        // Apply incoming message payload
+        if ("PRODUCER".equals(type)) {
+            currentProduced += kwh;
+        } else if ("USER".equals(type)) {
+            currentUsedTotal += kwh;
+        }
 
-        // Save or update the hourly record
-        HourlyUsage newHourlyUsage = new HourlyUsage();
-        newHourlyUsage.setRecordedHour(hourToCalculate);
-        newHourlyUsage.setCommunityProduced(totalProduced);
-        newHourlyUsage.setCommunityUsed(communityUsed);
-        newHourlyUsage.setGridUsed(gridUsed);
+        // Recalculate energy distribution using the Net Metering approach
+        double newCommunityUsed = Math.min(currentProduced, currentUsedTotal);
+        double newGridUsed = Math.max(0, currentUsedTotal - currentProduced);
 
-        hourlyRepo.save(newHourlyUsage);
-        System.out.println("SUCCESS! Hourly Usage Updated: Produced=" + totalProduced +
-                ", CommunityUsed=" + communityUsed + ", GridUsed=" + gridUsed);
+        // Update the entity, rounding to 5 decimal places to prevent floating-point precision issues
+        usage.setCommunityProduced(Math.round(currentProduced * 100000.0) / 100000.0);
+        usage.setCommunityUsed(Math.round(newCommunityUsed * 100000.0) / 100000.0);
+        usage.setGridUsed(Math.round(newGridUsed * 100000.0) / 100000.0);
+
+        // Persist the updated aggregate
+        hourlyRepo.save(usage);
+
+        System.out.println("[UsageService] Aggregation updated for " + targetHour +
+                ": Produced=" + usage.getCommunityProduced() +
+                ", CommunityUsed=" + usage.getCommunityUsed() +
+                ", GridUsed=" + usage.getGridUsed());
     }
 }

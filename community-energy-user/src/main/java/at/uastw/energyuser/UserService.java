@@ -38,23 +38,22 @@ public class UserService implements SchedulingConfigurer {
     public void publish() {
         double kwh = calculateKwh();
         String datetime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
-        int userId = random.nextInt(10) + 1;
 
         Map<String, Object> message = new HashMap<>();
         message.put("type", "USER");
         message.put("association", "COMMUNITY");
-        message.put("id", userId);
         message.put("kwh", kwh);
         message.put("datetime", datetime);
 
         rabbitTemplate.convertAndSend(ENERGY_QUEUE, message);
-        System.out.println("[User " + userId + "] sent=" + kwh + " kWh at " + datetime);
+        System.out.println("[User] sent=" + kwh + " kWh at " + datetime);
     }
 
     private double calculateKwh() {
         double timeFactor = getTimeFactor();
-        double kwh = 0.001 * timeFactor;
-        return Math.round(kwh * 100000.0) / 100000.0;
+        double kwh = 0.01 * timeFactor;
+        double variation = 0.002 * random.nextDouble();
+        return Math.round((kwh+variation) * 100000.0) / 100000.0;
     }
 
     private double getTimeFactor() {

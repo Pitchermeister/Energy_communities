@@ -21,14 +21,16 @@ public class PercentageMessageListener {
             String targetHourStr = (String) message.get("targetHour");
             LocalDateTime targetHour = LocalDateTime.parse(targetHourStr);
 
-            System.out.println("Trigger received! Calculating percentages for: " + targetHour);
-
+            // 1. Calculate and save (Upsert) the data for the current hour
             repository.calculateAndSavePercentages(targetHour);
 
-            System.out.println("SUCCESS: Percentages updated in database!");
+            // 2. Delete any historical records older than the current hour
+            repository.deleteOldRecords(targetHour);
+
+            System.out.println("[PercentageService] Updated percentages & cleared history for: " + targetHour);
 
         } catch (Exception e) {
-            System.err.println("Error processing percentage update: " + e.getMessage());
+            System.err.println("[PercentageService] Error processing update: " + e.getMessage());
         }
     }
 }
