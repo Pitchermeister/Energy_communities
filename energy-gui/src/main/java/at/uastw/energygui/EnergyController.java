@@ -1,175 +1,115 @@
 package at.uastw.energygui;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
-import javafx.scene.control.ListView;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.scene.control.Label;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 public class EnergyController {
 
-    @FXML private ListView<String> lv_current;
-    @FXML private ListView<String> lv_historical;
-    @FXML private DatePicker dp_start;
-    @FXML private DatePicker dp_end;
-    @FXML private ComboBox<String> cb_start_hour;
-    @FXML private ComboBox<String> cb_end_hour;
+    // Current Energy Data
+    @FXML private Label lblProduced;
+    @FXML private Label lblCommunityUsed;
+    @FXML private Label lblGridUsed;
+    @FXML private Label lblDepletion;
+    @FXML private Label lblGridPortion;
+    @FXML private Label lblCurrentStatus;
 
-    // The tool to read the raw JSON
+    // Historical Data Aggregation
+    @FXML private DatePicker dpStart;
+    @FXML private DatePicker dpEnd;
+    @FXML private ComboBox<Integer> cbStartHour;
+    @FXML private ComboBox<Integer> cbEndHour;
+    @FXML private Label lblSumProduced;
+    @FXML private Label lblSumCommunityUsed;
+    @FXML private Label lblSumGridUsed;
+    @FXML private Label lblHistStatus;
+
     private final ObjectMapper mapper = new ObjectMapper();
 
     @FXML
     public void initialize() {
-        List<String> hours = new ArrayList<>();
+        // Fill the hour drop-downs with 0..23
         for (int i = 0; i < 24; i++) {
-            hours.add(String.format("%02d:00", i));
+            cbStartHour.getItems().add(i);
+            cbEndHour.getItems().add(i);
         }
-        cb_start_hour.setItems(FXCollections.observableArrayList(hours));
-        cb_end_hour.setItems(FXCollections.observableArrayList(hours));
-        cb_start_hour.setValue("00:00");
-        cb_end_hour.setValue("23:00");
+        cbStartHour.setValue(0);
+        cbEndHour.setValue(23);
 
-        // UI TRICK: Set default dates so they are never null!
-        // This completely prevents NullPointerExceptions.
-        dp_start.setValue(LocalDate.now().minusDays(1)); // Default to Yesterday
-        dp_end.setValue(LocalDate.now()); // Default to Today
+        // Default dates so the values are never null
+        dpStart.setValue(LocalDate.now().minusDays(1));
+        dpEnd.setValue(LocalDate.now());
     }
 
     @FXML
     protected void onRefreshClicked() {
         try {
-            HttpClient client = HttpClient.newBuilder().build();
+            HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:8091/energy/current"))
                     .GET().build();
-
             String body = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-            lv_current.getItems().clear();
 
-            // Read the JSON and format it nicely
-            JsonNode root = mapper.readTree(body);
-            lv_current.getItems().add(formatJsonNode(root));
+            JsonNode node = mapper.readTree(body);
 
+            lblProduced.setText(String.format("%.2f kWh", node.get("communityProduced").asDouble()));
+            lblCommunityUsed.setText(String.format("%.2f kWh", node.get("communityUsed").asDouble()));
+            lblGridUsed.setText(String.format("%.2f kWh", node.get("gridUsed").asDouble()));
+
+            lblDepletion.setText(String.format("Community Pool Depletion: %.2f %%", node.get("communityDepleted").asDouble()));
+            lblGridPortion.setText(String.format("Grid Portion: %.2f %%", node.get("gridPortion").asDouble()));
+
+            lblCurrentStatus.setText("");
         } catch (Exception e) {
-            lv_current.getItems().clear();
-            lv_current.getItems().add("Error fetching data. Is the backend running?");
+            lblCurrentStatus.setText("Error fetching current data. Is the backend running?");
         }
     }
 
     @FXML
     protected void onLoadHistoricalClicked() {
         try {
-            // Because we set defaults in initialize(), dp_start and dp_end will never be empty here!
-            String start = dp_start.getValue().toString() + "T" + cb_start_hour.getValue() + ":00";
-            String end = dp_end.getValue().toString() + "T" + cb_end_hour.getValue() + ":00";
+            String start = dpStart.getValue() + String.format("T%02d:00:00", cbStartHour.getValue());
+            String end = dpEnd.getValue() + String.format("T%02d:00:00", cbEndHour.getValue());
 
-            HttpClient client = HttpClient.newBuilder().build();
+            HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:8091/energy/historical?start=" + start + "&end=" + end))
                     .GET().build();
-
             String body = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
-            lv_historical.getItems().clear();
 
             JsonNode root = mapper.readTree(body);
 
-            // If it's a list of history, loop through and add each one
-            if (root.isArray()) {
-                for (JsonNode node : root) {
-                    lv_historical.getItems().add(formatJsonNode(node));
-                }
+            double sumProduced = 0;
+            double sumCommunityUsed = 0;
+            double sumGridUsed = 0;
+
+            for (JsonNode node : root) {
+                sumProduced += node.get("communityProduced").asDouble();
+                sumCommunityUsed += node.get("communityUsed").asDouble();
+                sumGridUsed += node.get("gridUsed").asDouble();
+            }
+
+            lblSumProduced.setText(String.format("%.2f kWh", sumProduced));
+            lblSumCommunityUsed.setText(String.format("%.2f kWh", sumCommunityUsed));
+            lblSumGridUsed.setText(String.format("%.2f kWh", sumGridUsed));
+
+            if (root.size() == 0) {
+                lblHistStatus.setText("No historical data found for this time range.");
             } else {
-                lv_historical.getItems().add(formatJsonNode(root));
+                lblHistStatus.setText("");
             }
-
-            // Tell the user if the database returned an empty list
-            if (lv_historical.getItems().isEmpty()) {
-                lv_historical.getItems().add("No historical data found for this time range.");
-            }
-
         } catch (Exception e) {
-            lv_historical.getItems().clear();
-            lv_historical.getItems().add("Error fetching data. Is the backend running?");
+            lblHistStatus.setText("Error fetching historical data. Is the backend running?");
         }
-    }
-
-    // HELPER: Advanced 3-Line JSON Formatter (Lambda-Free)
-    private String formatJsonNode(JsonNode node) {
-        String dateStr = "";
-        String timeStr = "";
-        StringBuilder energyLines = new StringBuilder();
-        StringBuilder percentLines = new StringBuilder();
-
-        // FIX: Replaced the Lambda with a standard Iterator loop!
-        java.util.Iterator<java.util.Map.Entry<String, JsonNode>> fields = node.fields();
-        while (fields.hasNext()) {
-            java.util.Map.Entry<String, JsonNode> entry = fields.next();
-            String rawKey = entry.getKey();
-            JsonNode valNode = entry.getValue();
-
-            // 1. Regex trick: Split CamelCase (e.g. "gridPortion" -> "grid Portion") and capitalize
-            String formattedKey = rawKey.replaceAll("([a-z])([A-Z]+)", "$1 $2");
-            formattedKey = formattedKey.substring(0, 1).toUpperCase() + formattedKey.substring(1);
-
-            // 2. Extract and split Date/Time
-            if (rawKey.toLowerCase().contains("date") || rawKey.toLowerCase().contains("time") || rawKey.toLowerCase().contains("hour")) {
-                String rawVal = valNode.asText();
-                if (rawVal.contains("T")) {
-                    String[] parts = rawVal.split("T");
-                    dateStr = parts[0];
-                    timeStr = parts[1];
-                } else {
-                    dateStr = rawVal;
-                }
-            }
-            // 3. Round Doubles and assign units (kWh vs %)
-            else if (valNode.isNumber()) {
-                double val = valNode.asDouble();
-                // Format to exactly 2 decimal places
-                String formattedVal = String.format(java.util.Locale.US, "%.2f", val);
-
-                if (rawKey.toLowerCase().contains("depl") || rawKey.toLowerCase().contains("port") || rawKey.toLowerCase().contains("percent")) {
-                    percentLines.append(formattedKey).append(": ").append(formattedVal).append(" %  |  ");
-                } else {
-                    // Default to kWh for produced/used
-                    energyLines.append(formattedKey).append(": ").append(formattedVal).append(" kWh  |  ");
-                }
-            } else {
-                // Catch-all for basic strings
-                energyLines.append(formattedKey).append(": ").append(valNode.asText()).append("  |  ");
-            }
-        }
-
-        // 4. Assemble the final 3-line String
-        StringBuilder finalString = new StringBuilder();
-        if (!dateStr.isEmpty()) {
-            finalString.append("Date: ").append(dateStr);
-            if (!timeStr.isEmpty()) {
-                finalString.append("  |  Time: ").append(timeStr);
-            }
-            finalString.append("\n");
-        }
-
-        // Add energy stats and remove the trailing "  |  "
-        if (energyLines.length() > 0) {
-            finalString.append(energyLines.substring(0, Math.max(0, energyLines.length() - 5))).append("\n");
-        }
-
-        // Add percentages and remove the trailing "  |  "
-        if (percentLines.length() > 0) {
-            finalString.append(percentLines.substring(0, Math.max(0, percentLines.length() - 5)));
-        }
-
-        return finalString.toString().trim();
     }
 }
