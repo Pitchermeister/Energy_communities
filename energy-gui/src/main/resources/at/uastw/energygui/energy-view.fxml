@@ -5,7 +5,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -15,22 +15,54 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <Label text="Current Energy Data" style="-fx-font-weight: bold;"/>
+    <!-- ===== Current Energy Data ===== -->
+    <Label text="Current Energy Data" style="-fx-font-weight: bold; -fx-font-size: 14;"/>
     <Button text="Refresh" onAction="#onRefreshClicked"/>
-    <ListView fx:id="lv_current" prefHeight="100"/>
 
-    <Label text="Historical Data" style="-fx-font-weight: bold;"/>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Community Produced:"/>
+        <Label fx:id="lblProduced" text="-"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Community Used:"/>
+        <Label fx:id="lblCommunityUsed" text="-"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Grid Used:"/>
+        <Label fx:id="lblGridUsed" text="-"/>
+    </HBox>
+    <Label fx:id="lblDepletion" text="Community Pool Depletion: -"/>
+    <Label fx:id="lblGridPortion" text="Grid Portion: -"/>
+    <Label fx:id="lblCurrentStatus" style="-fx-text-fill: red;"/>
+
+    <Separator/>
+
+    <!-- ===== Historical Data ===== -->
+    <Label text="Historical Data" style="-fx-font-weight: bold; -fx-font-size: 14;"/>
     <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="Start:"/>
-        <DatePicker fx:id="dp_start"/>
-        <ComboBox fx:id="cb_start_hour" promptText="Stunde"/>
+        <DatePicker fx:id="dpStart"/>
+        <ComboBox fx:id="cbStartHour" promptText="Stunde"/>
     </HBox>
     <HBox spacing="10" alignment="CENTER_LEFT">
         <Label text="End:"/>
-        <DatePicker fx:id="dp_end"/>
-        <ComboBox fx:id="cb_end_hour" promptText="Stunde"/>
+        <DatePicker fx:id="dpEnd"/>
+        <ComboBox fx:id="cbEndHour" promptText="Stunde"/>
     </HBox>
     <Button text="Load Historical Data" onAction="#onLoadHistoricalClicked"/>
-    <ListView fx:id="lv_historical" prefHeight="200"/>
+
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Sum Produced:"/>
+        <Label fx:id="lblSumProduced" text="-"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Sum Community Used:"/>
+        <Label fx:id="lblSumCommunityUsed" text="-"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Sum Grid Used:"/>
+        <Label fx:id="lblSumGridUsed" text="-"/>
+    </HBox>
+    <Label fx:id="lblHistStatus" style="-fx-text-fill: red;"/>
 
 </VBox>
