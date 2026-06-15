@@ -29,7 +29,7 @@ public class ProducerService implements SchedulingConfigurer {
     }
 
     @Override
-    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) { // registieren geplanter Aufgabe
         taskRegistrar.addTriggerTask(this::publish, triggerContext -> {
             Instant lastCompletion = triggerContext.lastCompletion();
             Instant nextStart = lastCompletion != null ? lastCompletion : Instant.now();
@@ -41,7 +41,7 @@ public class ProducerService implements SchedulingConfigurer {
         double kwh = calculateKwh();
         String datetime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
 
-        Map<String, Object> message = new HashMap<>();
+        Map<String, Object> message = new HashMap<>(); //Sammlung Schlüssel-Wert-Paare
         message.put("type", "PRODUCER");
         message.put("association", "COMMUNITY");
         message.put("kwh", kwh);
@@ -54,8 +54,8 @@ public class ProducerService implements SchedulingConfigurer {
     private double calculateKwh() {
         double sunlightFactor = weatherDataFetcher.getSunlightFactor();
         double base = 0.016 * sunlightFactor;
-        double variation = 0.003 * random.nextDouble();
-        return Math.round((base + variation) * 100000.0) / 100000.0;
+        double variation = 0.003 * random.nextDouble(); //für Schwankungen
+        return Math.round((base + variation) * 100000.0) / 100000.0; //Runden auf 5 NKS
     }
 
     private long randomUpdateDelay() {
