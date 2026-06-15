@@ -53,6 +53,11 @@ public class ProducerService implements SchedulingConfigurer {
 
     private double calculateKwh() {
         double sunlightFactor = weatherDataFetcher.getSunlightFactor();
+        // no power generation between sunset and sunrise
+        if (sunlightFactor == 0.0) {
+            return 0.0;
+        }
+
         double base = 0.016 * sunlightFactor;
         double variation = 0.003 * random.nextDouble();
         return Math.round((base + variation) * 100000.0) / 100000.0;

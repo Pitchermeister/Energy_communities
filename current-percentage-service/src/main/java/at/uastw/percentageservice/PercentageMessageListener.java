@@ -9,10 +9,10 @@ import java.util.Map;
 @Component
 public class PercentageMessageListener {
 
-    private final HourlyPercentageRepository repository;
+    private final PercentageCalculationService calculationService;
 
-    public PercentageMessageListener(HourlyPercentageRepository repository) {
-        this.repository = repository;
+    public PercentageMessageListener(PercentageCalculationService calculationService) {
+        this.calculationService = calculationService;
     }
 
     @RabbitListener(queues = "percentage-update-queue")
@@ -21,11 +21,8 @@ public class PercentageMessageListener {
             String targetHourStr = (String) message.get("targetHour");
             LocalDateTime targetHour = LocalDateTime.parse(targetHourStr);
 
-            // 1. Calculate and save (Upsert) the data for the current hour
-            repository.calculateAndSavePercentages(targetHour);
-
-            // 2. Delete any historical records older than the current hour
-            repository.deleteOldRecords(targetHour);
+            // Delegate to the business logic service
+            calculationService.processPercentagesForHour(targetHour);
 
             System.out.println("[PercentageService] Updated percentages & cleared history for: " + targetHour);
 
