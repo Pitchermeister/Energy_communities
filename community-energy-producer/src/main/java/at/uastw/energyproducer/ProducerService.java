@@ -29,7 +29,8 @@ public class ProducerService implements SchedulingConfigurer {
     }
 
     @Override
-    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) { // registieren geplanter Aufgabe
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+        // Registers the scheduled task for execution
         taskRegistrar.addTriggerTask(this::publish, triggerContext -> {
             Instant lastCompletion = triggerContext.lastCompletion();
             Instant nextStart = lastCompletion != null ? lastCompletion : Instant.now();
@@ -41,7 +42,8 @@ public class ProducerService implements SchedulingConfigurer {
         double kwh = calculateKwh();
         String datetime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).toString();
 
-        Map<String, Object> message = new HashMap<>(); //Sammlung Schlüssel-Wert-Paare
+        // Collection of Key-Value pairs to build the JSON message payload
+        Map<String, Object> message = new HashMap<>();
         message.put("type", "PRODUCER");
         message.put("association", "COMMUNITY");
         message.put("kwh", kwh);
@@ -53,14 +55,19 @@ public class ProducerService implements SchedulingConfigurer {
 
     private double calculateKwh() {
         double sunlightFactor = weatherDataFetcher.getSunlightFactor();
-        // no power generation between sunset and sunrise
+
+        // SECURITY GATE: If it's night time (sunlightFactor == 0.0), the solar panel produces nothing. No variation added!
         if (sunlightFactor == 0.0) {
             return 0.0;
         }
 
         double base = 0.016 * sunlightFactor;
-        double variation = 0.003 * random.nextDouble(); //für Schwankungen
-        return Math.round((base + variation) * 100000.0) / 100000.0; //Runden auf 5 NKS
+
+        // Adds a small random variation to simulate real-world fluctuations
+        double variation = 0.003 * random.nextDouble();
+
+        // Rounds the final calculation to 5 decimal places
+        return Math.round((base + variation) * 100000.0) / 100000.0;
     }
 
     private long randomUpdateDelay() {
